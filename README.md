@@ -45,31 +45,31 @@ A modern Anki addon that integrates OpenEvidence directly into your Anki interfa
 The addon comes with **3 preset keyboard shortcuts** that let you instantly fill the OpenEvidence search box with card content in different formats. All shortcuts work while focused on the OpenEvidence search box.
 
 **Preset 1: Standard Explain** - `Ctrl+Shift+S` (or `Cmd+Shift+S` on Mac)
-- **Question side**: Sends your question with a polite prompt
+- **Front side**: Sends your front with a polite prompt
   ```
   Can you explain this to me:
 
-  [Your question text]
+  [Your front]
   ```
-- **Answer side**: Sends both question and answer
+- **Back side**: Sends both front and back
   ```
   Can you explain this to me:
 
   Question:
-  [Your question text]
+  [Your front]
 
   Answer:
-  [Your answer text]
+  [Your back]
   ```
 
 **Preset 2: Front/Back** - `Ctrl+Shift+Q` (or `Cmd+Shift+Q` on Mac)
-- Sends only the front (question) of your card on both sides
-- Perfect for when you only want to search the question
+- Sends only the front of your card on both sides
+- Perfect for when you only want to search the front
 
 **Preset 3: Back Only** - `Ctrl+Shift+A` (or `Cmd+Shift+A` on Mac)
-- Question side: Sends nothing (empty)
-- Answer side: Sends only the back (answer) of your card
-- Useful when you want to research just the answer content
+- Front side: Sends nothing (empty)
+- Back side: Sends only the back of your card
+- Useful when you want to research just the back content
 
 **Customization:**
 Click the **Settings** button (gear icon) in the panel's title bar to:
