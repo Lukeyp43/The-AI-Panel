@@ -132,10 +132,24 @@ HIGHLIGHT_BUBBLE_JS = """
             e.stopPropagation();
             handleAddToChat();
         });
+        // Prevent mouseup/mousedown from bubbling to document level
+        addToChatBtn.addEventListener('mouseup', (e) => {
+            e.stopPropagation();
+        });
+        addToChatBtn.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+        });
 
         askQuestionBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             renderInputState();
+        });
+        // Prevent mouseup/mousedown from bubbling to document level
+        askQuestionBtn.addEventListener('mouseup', (e) => {
+            e.stopPropagation();
+        });
+        askQuestionBtn.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
         });
     }
 
@@ -208,6 +222,13 @@ HIGHLIGHT_BUBBLE_JS = """
         submitBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             handleSubmitQuestion();
+        });
+        // Prevent mouseup/mousedown from bubbling to document level
+        submitBtn.addEventListener('mouseup', (e) => {
+            e.stopPropagation();
+        });
+        submitBtn.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
         });
     }
 
@@ -302,6 +323,10 @@ HIGHLIGHT_BUBBLE_JS = """
     // Hide bubble when clicking outside
     document.addEventListener('mousedown', (e) => {
         if (bubble && !bubble.contains(e.target)) {
+            // Don't hide if we're in input state (user is typing a question)
+            if (currentState === 'input') {
+                return;
+            }
             const selection = window.getSelection();
             if (!selection.toString().trim()) {
                 hideBubble();

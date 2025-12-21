@@ -185,7 +185,7 @@ def handle_add_context(selected_text):
                 var existingText = searchInput.value.trim();
 
                 // Append to existing text if present, otherwise just set new text
-                var finalText = existingText ? existingText + '\\n\\n' + newText : newText;
+                var finalText = existingText ? existingText + ' ' + newText : newText;
 
                 // Use native setter for React compatibility
                 var nativeSetter = Object.getOwnPropertyDescriptor(
