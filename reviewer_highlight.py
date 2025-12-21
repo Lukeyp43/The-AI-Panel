@@ -23,15 +23,20 @@ HIGHLIGHT_BUBBLE_JS = """
 
     // Track Command/Meta key state
     document.addEventListener('keydown', (e) => {
-        if (e.metaKey || e.key === 'Meta') {
+        if (e.metaKey || e.key === 'Meta' || e.key === 'Command') {
             cmdKeyHeld = true;
         }
     });
 
     document.addEventListener('keyup', (e) => {
-        if (!e.metaKey && e.key === 'Meta') {
+        if (e.key === 'Meta' || e.key === 'Command') {
             cmdKeyHeld = false;
         }
+    });
+
+    // Also track when window loses focus (releases all keys)
+    window.addEventListener('blur', () => {
+        cmdKeyHeld = false;
     });
 
     // Create the bubble element

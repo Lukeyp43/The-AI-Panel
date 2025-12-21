@@ -181,17 +181,21 @@ def handle_add_context(selected_text):
         (function() {
             var searchInput = document.querySelector('input[placeholder*="medical"], input[placeholder*="question"], textarea, input[type="text"]');
             if (searchInput) {
-                var text = %s;
+                var newText = %s;
+                var existingText = searchInput.value.trim();
+
+                // Append to existing text if present, otherwise just set new text
+                var finalText = existingText ? existingText + '\\n\\n' + newText : newText;
 
                 // Use native setter for React compatibility
                 var nativeSetter = Object.getOwnPropertyDescriptor(
                     searchInput.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype,
                     'value'
                 ).set;
-                nativeSetter.call(searchInput, text);
+                nativeSetter.call(searchInput, finalText);
 
                 // Dispatch events
-                searchInput.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: text }));
+                searchInput.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: finalText }));
                 searchInput.dispatchEvent(new Event('change', { bubbles: true }));
 
                 // Focus the input
