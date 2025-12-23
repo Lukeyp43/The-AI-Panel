@@ -498,6 +498,52 @@ HIGHLIGHT_BUBBLE_JS = """
         contextText = ''; // Clear context when bubble is hidden
     }
 
+    // Drag functionality
+    let isDragging = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    function startDrag(e) {
+        // Don't start drag on buttons, inputs, or textareas
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+
+        isDragging = true;
+        const rect = bubble.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+        bubble.style.cursor = 'grabbing';
+        e.preventDefault();
+    }
+
+    function drag(e) {
+        if (!isDragging) return;
+
+        const newLeft = e.clientX - dragOffsetX;
+        const newTop = e.clientY - dragOffsetY;
+
+        bubble.style.left = newLeft + 'px';
+        bubble.style.top = newTop + 'px';
+    }
+
+    function stopDrag() {
+        if (isDragging) {
+            isDragging = false;
+            bubble.style.cursor = 'default';
+        }
+    }
+
+    // Add drag event listeners to the bubble
+    document.addEventListener('mousedown', (e) => {
+        if (bubble.contains(e.target) && bubble.style.display !== 'none') {
+            startDrag(e);
+        }
+    });
+
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', stopDrag);
+
     // Handle mouseup event
     document.addEventListener('mouseup', (e) => {
         // Small delay to allow selection to complete
