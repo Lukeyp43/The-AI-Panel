@@ -22,6 +22,8 @@ zip -r ../openevidence_panel.ankiaddon \
     settings_home.py \
     settings_editor.py \
     settings_list.py \
+    settings_quick_actions.py \
+    key_recorder.py \
     utils.py \
     reviewer_highlight.py \
     manifest.json \
