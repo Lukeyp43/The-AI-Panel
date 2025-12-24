@@ -17,6 +17,9 @@ build/
 # Anki local files
 meta.json
 
+# WebEngine cache and sensitive data
+webengine_data/
+
 # macOS
 .DS_Store
 .AppleDouble
