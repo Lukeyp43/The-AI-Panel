@@ -108,60 +108,54 @@ class QuickActionsSettingsView(KeyRecorderMixin, QWidget):
 
         content_layout.addStretch()
 
-        # Save button at bottom
-        save_btn = QPushButton("Save")
-        save_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        save_btn.setFixedHeight(44)
-        save_btn.setStyleSheet("""
-            QPushButton {
-                background: #3b82f6;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 600;
-            }
-            QPushButton:hover {
-                background: #2563eb;
-            }
-        """)
-        save_btn.clicked.connect(self.save_shortcuts)
-        content_layout.addWidget(save_btn)
+        # Store initial state to detect changes
+        self._initial_state = {
+            'add_to_chat': self.shortcuts["add_to_chat"]["keys"].copy(),
+            'ask_question': self.shortcuts["ask_question"]["keys"].copy()
+        }
 
         scroll.setWidget(content)
         layout.addWidget(scroll)
+
+        # Bottom section with Save button
+        bottom_section = QWidget()
+        bottom_section.setStyleSheet("background: #1e1e1e; border-top: 1px solid rgba(255, 255, 255, 0.06);")
+        bottom_layout = QVBoxLayout(bottom_section)
+        bottom_layout.setContentsMargins(16, 12, 16, 12)
+
+        # Save button (disabled by default)
+        self.save_btn = QPushButton("Save")
+        self.save_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.save_btn.setFixedHeight(44)
+        self.save_btn.setEnabled(False)  # Disabled by default
+        self._update_save_button_style()
+        self.save_btn.clicked.connect(self.save_shortcuts)
+        bottom_layout.addWidget(self.save_btn)
+
+        layout.addWidget(bottom_section)
 
     def _update_shortcut_display(self, button, keys):
         """Update a shortcut display button with current keys"""
         from .utils import format_keys_verbose
 
         if self.recording_target:
-            # During recording
+            # During recording - no hover state to avoid bright blue
             if keys:
                 display_text = format_keys_verbose(keys)
                 button.setText(display_text)
-                button.setStyleSheet("""
-                    QPushButton {
-                        background: #2c2c2c;
-                        color: #3b82f6;
-                        border: 2px solid #3b82f6;
-                        border-radius: 8px;
-                        font-size: 14px;
-                        font-weight: 500;
-                    }
-                """)
             else:
                 button.setText("Press any key combination...")
-                button.setStyleSheet("""
-                    QPushButton {
-                        background: #2c2c2c;
-                        color: #3b82f6;
-                        border: 2px solid #3b82f6;
-                        border-radius: 8px;
-                        font-size: 14px;
-                        font-weight: 500;
-                    }
-                """)
+
+            button.setStyleSheet("""
+                QPushButton {
+                    background: #2c2c2c;
+                    color: #3b82f6;
+                    border: 2px solid #3b82f6;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-weight: 500;
+                }
+            """)
         else:
             # Normal state
             if keys:
@@ -181,7 +175,7 @@ class QuickActionsSettingsView(KeyRecorderMixin, QWidget):
                 }
                 QPushButton:hover {
                     background: #333333;
-                    border-color: #3b82f6;
+                    border-color: #4b5563;
                 }
             """)
 
@@ -221,6 +215,49 @@ class QuickActionsSettingsView(KeyRecorderMixin, QWidget):
             self._update_shortcut_display(self.ask_question_display, self.shortcuts["ask_question"]["keys"])
 
         self.recording_target = None
+
+        # Check if changes were made to enable save button
+        self._check_for_changes()
+
+    def _check_for_changes(self):
+        """Detect if any changes were made and enable/disable save button"""
+        # Compare current state with initial state
+        has_changes = (
+            self.shortcuts["add_to_chat"]["keys"] != self._initial_state['add_to_chat'] or
+            self.shortcuts["ask_question"]["keys"] != self._initial_state['ask_question']
+        )
+
+        # Enable/disable save button
+        self.save_btn.setEnabled(has_changes)
+        self._update_save_button_style()
+
+    def _update_save_button_style(self):
+        """Update save button appearance based on enabled state"""
+        if self.save_btn.isEnabled():
+            self.save_btn.setStyleSheet("""
+                QPushButton {
+                    background: #3b82f6;
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-weight: 600;
+                }
+                QPushButton:hover {
+                    background: #2563eb;
+                }
+            """)
+        else:
+            self.save_btn.setStyleSheet("""
+                QPushButton {
+                    background: #333333;
+                    color: #666666;
+                    border: 1px solid #444444;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-weight: 600;
+                }
+            """)
 
     def save_shortcuts(self):
         """Save shortcuts to config"""

@@ -537,6 +537,7 @@ class OpenEvidencePanel(QWidget):
             current_widget = self.stacked_widget.widget(1)
             # Import here to avoid circular import at module level
             from .settings import SettingsEditorView, SettingsListView, SettingsHomeView
+            from .settings_quick_actions import QuickActionsSettingsView
 
             if isinstance(current_widget, SettingsEditorView):
                 # In editor view, discard changes and go back to templates list view
@@ -546,6 +547,9 @@ class OpenEvidencePanel(QWidget):
                     self.show_templates_view()
             elif isinstance(current_widget, SettingsListView):
                 # In templates list view, go back to settings home
+                self.show_home_view()
+            elif isinstance(current_widget, QuickActionsSettingsView):
+                # In quick actions view, go back to settings home
                 self.show_home_view()
             elif isinstance(current_widget, SettingsHomeView):
                 # In settings home, go back to web view
