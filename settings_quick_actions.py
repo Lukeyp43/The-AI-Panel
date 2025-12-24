@@ -265,9 +265,94 @@ class QuickActionsSettingsView(KeyRecorderMixin, QWidget):
         config["quick_actions"] = self.shortcuts
         mw.addonManager.writeConfig(__name__, config)
 
-        # Show success message with instruction
-        tooltip("Quick Actions shortcuts saved!\n\nReview a new flashcard to see the updated shortcuts.", period=3000)
+        # Update the JavaScript config in the reviewer immediately
+        self._update_reviewer_config()
+
+        # Show success message
+        tooltip("Quick Actions shortcuts saved!", period=2000)
 
         # Navigate back to home
         if self.parent_panel and hasattr(self.parent_panel, 'show_home_view'):
             self.parent_panel.show_home_view()
+
+    def _update_reviewer_config(self):
+        """Update the quick actions config in the reviewer's JavaScript context"""
+        from aqt import mw
+        
+        # Get the current config
+        config = mw.addonManager.getConfig(__name__)
+        quick_actions = config.get("quick_actions", {
+            "add_to_chat": {"keys": ["Meta", "F"]},
+            "ask_question": {"keys": ["Meta", "R"]}
+        })
+
+        # Format shortcuts for JavaScript
+        add_to_chat_keys = quick_actions["add_to_chat"]["keys"]
+        ask_question_keys = quick_actions["ask_question"]["keys"]
+
+        # Create display text (e.g., "⌘F" or "Ctrl+Shift+F")
+        def format_shortcut_display(keys):
+            display_keys = []
+            for key in keys:
+                if key == "Meta":
+                    display_keys.append("⌘")
+                elif key == "Control":
+                    display_keys.append("Ctrl")
+                elif key == "Shift":
+                    display_keys.append("Shift")
+                elif key == "Alt":
+                    display_keys.append("Alt")
+                else:
+                    display_keys.append(key)
+            return "".join(display_keys) if "⌘" in display_keys else "+".join(display_keys)
+
+        add_to_chat_display = format_shortcut_display(add_to_chat_keys)
+        ask_question_display = format_shortcut_display(ask_question_keys)
+
+        # Create JavaScript to update the config
+        js_code = f"""
+        (function() {{
+            // Initialize config if it doesn't exist
+            if (!window.quickActionsConfig) {{
+                window.quickActionsConfig = {{}};
+            }}
+            
+            window.quickActionsConfig.addToChat = {{
+                keys: {add_to_chat_keys},
+                display: "{add_to_chat_display}"
+            }};
+            window.quickActionsConfig.askQuestion = {{
+                keys: {ask_question_keys},
+                display: "{ask_question_display}"
+            }};
+            
+            // If bubble is visible, update the display text in the buttons
+            var bubble = document.getElementById('anki-highlight-bubble');
+            if (bubble && bubble.style.display !== 'none') {{
+                var addToChatSpan = bubble.querySelector('#add-to-chat-btn span:last-child');
+                var askQuestionSpan = bubble.querySelector('#ask-question-btn span:last-child');
+                if (addToChatSpan) {{
+                    addToChatSpan.textContent = '{add_to_chat_display}';
+                }}
+                if (askQuestionSpan) {{
+                    askQuestionSpan.textContent = '{ask_question_display}';
+                }}
+            }}
+            
+            console.log('Anki: Quick Actions config updated:', window.quickActionsConfig);
+        }})();
+        """
+
+        # Try to inject into the reviewer webview
+        try:
+            if mw.reviewer and hasattr(mw.reviewer, 'web') and mw.reviewer.web:
+                # Try eval() first (Anki's webview method)
+                if hasattr(mw.reviewer.web, 'eval'):
+                    mw.reviewer.web.eval(js_code)
+                # Fallback to runJavaScript if available
+                elif hasattr(mw.reviewer.web, 'page'):
+                    mw.reviewer.web.page().runJavaScript(js_code)
+                print("OpenEvidence: Updated quick actions config in reviewer")
+        except Exception as e:
+            print(f"OpenEvidence: Could not update reviewer config: {e}")
+            # Config will be updated on next card review
