@@ -10,15 +10,58 @@ from aqt.qt import *
 try:
     from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                                   QPushButton, QCheckBox, QFrame, QSizePolicy)
-    from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSize
+    from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSize, QRect
     from PyQt6.QtGui import QPainter, QCursor, QPixmap
     from PyQt6.QtSvg import QSvgRenderer
 except ImportError:
     from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                                   QPushButton, QCheckBox, QFrame, QSizePolicy)
-    from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QSize
+    from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QSize, QRect
     from PyQt5.QtGui import QPainter, QCursor, QPixmap
     from PyQt5.QtSvg import QSvgRenderer
+
+
+class WordWrapLabel(QLabel):
+    """QLabel that properly handles word wrapping and height calculation"""
+
+    def __init__(self, text="", parent=None):
+        super().__init__(text, parent)
+        self.setWordWrap(True)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
+
+    def heightForWidth(self, width):
+        """Calculate required height for given width with word wrapping"""
+        if not self.text():
+            return 0
+
+        # Get font metrics
+        fm = self.fontMetrics()
+
+        # Calculate bounding rectangle for wrapped text
+        try:
+            # PyQt6
+            flags = Qt.TextFlag.TextWordWrap
+            rect = fm.boundingRect(QRect(0, 0, width, 10000), int(flags), self.text())
+        except:
+            # PyQt5
+            flags = Qt.TextWordWrap
+            rect = fm.boundingRect(0, 0, width, 10000, flags, self.text())
+
+        return rect.height() + 8  # Add padding for better spacing
+
+    def sizeHint(self):
+        """Return size hint based on current width"""
+        width = self.width() if self.width() > 0 else 300
+        height = self.heightForWidth(width)
+        return QSize(width, height)
+
+    def minimumSizeHint(self):
+        """Return minimum size hint"""
+        return self.sizeHint()
+
+    def hasHeightForWidth(self):
+        """Enable height-for-width layout calculation"""
+        return True
 
 
 class AccordionItem(QWidget):
@@ -94,64 +137,43 @@ class AccordionItem(QWidget):
         layout.addWidget(self.content_widget)
 
     def create_task_widget(self, task_data, is_last=False):
-        """Create a single task row with custom styling"""
+        """Create a single task row - SIMPLE VERSION"""
         task_container = QWidget()
         task_container.setStyleSheet("background: transparent; border: none;")
-        task_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-        container_layout = QHBoxLayout(task_container)
-        container_layout.setContentsMargins(0, 4, 0, 4)
-        container_layout.setSpacing(12)
 
-        # Left side: Circle with connecting line
-        left_widget = QWidget()
-        left_widget.setFixedWidth(28)
-        left_widget.setStyleSheet("background: transparent;")
-        left_layout = QVBoxLayout(left_widget)
-        left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(0)
+        # Simple horizontal layout
+        layout = QHBoxLayout(task_container)
+        layout.setContentsMargins(0, 8, 0, 8)
+        layout.setSpacing(12)
 
         # Circle indicator
         circle_label = QLabel()
         circle_label.setFixedSize(20, 20)
-        circle_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # Store reference for updating later
         if not hasattr(self, 'task_circles'):
             self.task_circles = []
         self.task_circles.append(circle_label)
 
-        left_layout.addWidget(circle_label, 0, Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(circle_label, 0, Qt.AlignmentFlag.AlignTop)
 
-        # Connecting line (if not last task)
-        if not is_last:
-            line = QFrame()
-            line.setFixedWidth(1)
-            line.setStyleSheet("background: #6b7280;")
-            left_layout.addWidget(line, 1, Qt.AlignmentFlag.AlignHCenter)
-        else:
-            left_layout.addStretch()
-
-        container_layout.addWidget(left_widget, 0, Qt.AlignmentFlag.AlignTop)
-
-        # Task text - clickable label
+        # Task text - SIMPLE label
         task_label = QLabel(task_data["text"])
         task_label.setWordWrap(True)
-        task_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         task_label.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        task_label.setStyleSheet("color: #D4D4D4; font-size: 16px; background: transparent; padding: 0px;")
+        task_label.setStyleSheet("color: #D4D4D4; font-size: 16px; background: transparent;")
 
-        # Store data for later reference
+        # Store data
         task_label.setProperty("task_data", task_data)
         task_label.setProperty("circle_label", circle_label)
         task_label.setProperty("container", task_container)
 
-        # Make it clickable
+        # Make clickable
         task_label.mousePressEvent = lambda event, cl=circle_label, tl=task_label, tc=task_container: self.toggle_task(cl, tl, tc)
 
-        container_layout.addWidget(task_label, 1, Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(task_label, 1)
 
         # Store references
-        checkbox_placeholder = QCheckBox()  # Hidden checkbox to maintain compatibility
+        checkbox_placeholder = QCheckBox()
         checkbox_placeholder.setVisible(False)
         checkbox_placeholder.setChecked(task_data["completed"])
         checkbox_placeholder.setProperty("circle_label", circle_label)
@@ -318,6 +340,8 @@ class TutorialAccordion(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setMinimumWidth(420)
         self.setMaximumWidth(420)
+        self.setMinimumHeight(400)  # Ensure enough height for content
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.MinimumExpanding)
 
         self.setup_ui()
         self.position_bottom_left()
@@ -599,9 +623,15 @@ class TutorialAccordion(QWidget):
 
     def adjust_size(self):
         """Adjust widget size to fit content"""
-        # Force layout to recalculate
+        # Force all child widgets to recalculate their sizes
+        for item in self.accordion_items:
+            item.updateGeometry()
+            if hasattr(item, 'content_widget'):
+                item.content_widget.updateGeometry()
+
+        # Force layout to recalculate (but don't call adjustSize - it constrains height)
+        self.layout().activate()
         self.updateGeometry()
-        self.adjustSize()
 
         # Reposition to ensure it stays in bottom left
         self.position_bottom_left()
