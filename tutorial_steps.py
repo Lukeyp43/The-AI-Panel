@@ -27,34 +27,35 @@ IS_MAC = sys.platform == "darwin"
 
 def format_keys(keys: list) -> str:
     """Format a list of keys into a readable shortcut string.
-    
-    Mac: Uses ⌘ for Meta (Command key), ^Ctrl for Control
+
+    Mac: Uses ⌘ Cmd for Meta (Command key), ^ Ctrl for Control
     Windows/Linux: Uses Ctrl for both Meta and Control
+    Format: "symbol space word" for each modifier (e.g., "⌘ Cmd + Q")
     """
     if IS_MAC:
         key_symbols = {
-            "Control": "^Ctrl",
-            "Shift": "Shift", 
-            "Alt": "Alt",
-            "Meta": "⌘",  # Command key on Mac
+            "Control": "^\u00A0Ctrl",
+            "Shift": "⇧\u00A0Shift",
+            "Alt": "⌥\u00A0Alt",
+            "Meta": "⌘\u00A0Cmd",  # Command key on Mac (symbol + name)
         }
     else:
         # Windows/Linux
         key_symbols = {
             "Control": "Ctrl",
-            "Shift": "Shift", 
+            "Shift": "Shift",
             "Alt": "Alt",
             "Meta": "Ctrl",  # On Windows, Meta maps to Ctrl for display
         }
-    
+
     formatted = []
     for key in keys:
         if key in key_symbols:
             formatted.append(key_symbols[key])
         else:
             formatted.append(key)
-    
-    return "+".join(formatted)
+
+    return "\u00A0+\u00A0".join(formatted)
 
 
 def get_quick_action_shortcut(action_name: str) -> str:
@@ -70,14 +71,14 @@ def get_quick_action_shortcut(action_name: str) -> str:
     # Platform-appropriate defaults
     if IS_MAC:
         if action_name == "add_to_chat":
-            return "⌘F"
+            return "⌘\u00A0Cmd\u00A0+\u00A0F"
         elif action_name == "ask_question":
-            return "⌘R"
+            return "⌘\u00A0Cmd\u00A0+\u00A0R"
     else:
         if action_name == "add_to_chat":
-            return "Ctrl+F"
+            return "Ctrl\u00A0+\u00A0F"
         elif action_name == "ask_question":
-            return "Ctrl+R"
+            return "Ctrl\u00A0+\u00A0R"
     return ""
 
 
@@ -95,15 +96,15 @@ def get_template_shortcut(template_name: str) -> str:
     # Platform-appropriate defaults
     if IS_MAC:
         defaults = {
-            "Standard Explain": "^Ctrl+Shift+S",
-            "Front/Back": "^Ctrl+Shift+Q",
-            "Back Only": "^Ctrl+Shift+A",
+            "Standard Explain": "^\u00A0Ctrl\u00A0+\u00A0⇧\u00A0Shift\u00A0+\u00A0S",
+            "Front/Back": "^\u00A0Ctrl\u00A0+\u00A0⇧\u00A0Shift\u00A0+\u00A0Q",
+            "Back Only": "^\u00A0Ctrl\u00A0+\u00A0⇧\u00A0Shift\u00A0+\u00A0A",
         }
     else:
         defaults = {
-            "Standard Explain": "Ctrl+Shift+S",
-            "Front/Back": "Ctrl+Shift+Q",
-            "Back Only": "Ctrl+Shift+A",
+            "Standard Explain": "Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0S",
+            "Front/Back": "Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0Q",
+            "Back Only": "Ctrl\u00A0+\u00A0Shift\u00A0+\u00A0A",
         }
     return defaults.get(template_name, "")
 
@@ -304,7 +305,7 @@ def get_tutorial_steps():
         target_type="none",
         target_ref=None,
         title="There's an even faster way — keyboard shortcuts!",
-        subtext=f"Instead of ⌘ Cmd + highlight and clicking, just highlight any text and use:\n\n{shortcut_add} = Add to Chat\n{shortcut_ask} = Ask Question",
+        subtext=f"Instead of ⌘ Cmd + highlight and clicking, just highlight any text and use:\n\n{shortcut_add} → Add to Chat\n{shortcut_ask} → Ask Question",
         advance_on_event=None,
         action_button="Show Me"
     ),
@@ -315,7 +316,7 @@ def get_tutorial_steps():
         target_type="coordinates",
         target_ref=get_reviewer_card_rect,
         title=f"Try it! Highlight any text, then press {shortcut_add} or {shortcut_ask}.",
-        subtext=f"{shortcut_add} = Add to Chat    {shortcut_ask} = Ask Question\n\nNo ⌘ Cmd + highlight needed — just highlight and use the shortcut.",
+        subtext=f"{shortcut_add} → Add to Chat\n{shortcut_ask} → Ask Question\n\nNo ⌘ Cmd + highlight needed — just highlight and use the shortcut.",
         advance_on_event="shortcut_used",
         action_button=None
     ),
@@ -471,7 +472,7 @@ def get_tutorial_steps():
         target_type="none",
         target_ref=None,
         title="You've learned all the templates! 🎉",
-        subtext=f"Remember: Click in the sidebar first, then:\n\n{shortcut_q} = Front only\n{shortcut_a} = Back only\n{shortcut_s} = Front & Back",
+        subtext=f"Remember: Click in the sidebar first, then:\n\n{shortcut_q} → Front only\n{shortcut_a} → Back only\n{shortcut_s} → Front & Back",
         advance_on_event=None,
         action_button="Next"
     ),
@@ -572,7 +573,7 @@ def get_tutorial_steps():
         target_type="none",
         target_ref=None,
         title="These are your Quick Action shortcuts.",
-        subtext=f"Remember {shortcut_add} (Add to Chat) and {shortcut_ask} (Ask Question)? You can change these shortcuts here if you'd like.",
+        subtext=f"Remember:\n\n{shortcut_add} → Add to Chat\n{shortcut_ask} → Ask Question\n\nYou can change these shortcuts here if you'd like.",
         advance_on_event=None,
         action_button="Next"
     ),
@@ -610,24 +611,24 @@ def get_tutorial_steps():
         action_button="Next"
     ),
 
-    # Step 30: How to sign in
+    # Step 30: Don't worry - it's free!
+    TutorialStep(
+        step_id="its_free_forever",
+        target_type="none",
+        target_ref=None,
+        title="Don't worry — it's 100% free forever!",
+        subtext="Creating an account is completely free and always will be. OpenEvidence is free for medical students and MDs when you sign up.",
+        advance_on_event=None,
+        action_button="Next"
+    ),
+
+    # Step 31: How to sign in
     TutorialStep(
         step_id="how_to_signin",
         target_type="none",
         target_ref=None,
         title="How to sign in:",
         subtext="Click the hamburger menu (☰) in the top right of the sidebar, then tap \"Log in\" or \"Sign up\".",
-        advance_on_event=None,
-        action_button="Next"
-    ),
-
-    # Step 31: Why I built this
-    TutorialStep(
-        step_id="why_i_built_this",
-        target_type="none",
-        target_ref=None,
-        title="Why I built this:",
-        subtext="I built this add-on to help bring AI to studying. I chose OpenEvidence because the AI is based on medical journal research, it's 100% free for medical students/MDs, and it's awesome!",
         advance_on_event=None,
         action_button="Next"
     ),
