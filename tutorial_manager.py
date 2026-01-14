@@ -11,7 +11,10 @@ from aqt import mw
 
 from .tutorial_coach_mark import CoachMark
 from .tutorial_overlay import TutorialOverlay
-from .tutorial_steps import TUTORIAL_STEPS, get_step_target_rect
+from .tutorial_steps import get_tutorial_steps, get_step_target_rect
+
+# Addon name for config storage (must match folder name, not __name__)
+ADDON_NAME = "openevidence_panel"
 
 
 class TutorialManager(QObject):
@@ -32,6 +35,7 @@ class TutorialManager(QObject):
         self.tutorial_active = False
         self.current_step_index = 0
         self.is_paused = False
+        self.tutorial_steps = []  # Will be populated with current shortcuts when tutorial starts
 
         # UI components
         self.coach_mark = None
@@ -64,14 +68,20 @@ class TutorialManager(QObject):
         progress and displays the appropriate step.
         """
         # Check if tutorial is already completed
-        config = mw.addonManager.getConfig(__name__) or {}
+        config = mw.addonManager.getConfig(ADDON_NAME) or {}
         if config.get("tutorial_completed", False):
             print("Tutorial already completed")
             return
 
-        # Load saved progress
-        saved_step = config.get("tutorial_step_index", 0)
-        self.current_step_index = saved_step
+        # Regenerate tutorial steps with current shortcuts from config
+        self.tutorial_steps = get_tutorial_steps()
+
+        # Mark tutorial as complete immediately so it won't restart if user closes Anki mid-tutorial
+        config["tutorial_completed"] = True
+        mw.addonManager.writeConfig(ADDON_NAME, config)
+
+        # Start from step 0 (don't resume mid-tutorial)
+        self.current_step_index = 0
 
         # Initialize UI components
         self._create_ui_components()
@@ -96,6 +106,36 @@ class TutorialManager(QObject):
         self.position_check_timer.stop()
         self._hide_all()
         self._save_completion()
+
+    def restart_tutorial(self):
+        """
+        Restart the tutorial from the beginning.
+
+        Resets all progress and starts fresh, even if previously completed.
+        """
+        # Stop any existing tutorial activity
+        self.tutorial_active = False
+        self.position_check_timer.stop()
+        self._hide_all()
+
+        # Regenerate tutorial steps with current shortcuts from config
+        self.tutorial_steps = get_tutorial_steps()
+
+        # Reset config to start fresh
+        config = mw.addonManager.getConfig(ADDON_NAME) or {}
+        config["tutorial_completed"] = False
+        config["tutorial_step_index"] = 0
+        mw.addonManager.writeConfig(ADDON_NAME, config)
+
+        # Reset internal state
+        self.current_step_index = 0
+        self.is_paused = False
+
+        # Start the tutorial
+        self._create_ui_components()
+        self.tutorial_active = True
+        self.position_check_timer.start(500)
+        self._show_current_step()
 
     def handle_event(self, event_name: str):
         """
@@ -122,7 +162,7 @@ class TutorialManager(QObject):
                 return
 
         # Check if this event advances the current step
-        current_step = TUTORIAL_STEPS[self.current_step_index]
+        current_step = self.tutorial_steps[self.current_step_index]
         if current_step.advance_on_event == event_name:
             self.advance_to_next_step()
 
@@ -135,7 +175,7 @@ class TutorialManager(QObject):
         """
         self.current_step_index += 1
 
-        if self.current_step_index >= len(TUTORIAL_STEPS):
+        if self.current_step_index >= len(self.tutorial_steps):
             # Tutorial complete!
             self._complete_tutorial()
         else:
@@ -166,11 +206,11 @@ class TutorialManager(QObject):
         if not self.tutorial_active:
             return
 
-        if self.current_step_index >= len(TUTORIAL_STEPS):
+        if self.current_step_index >= len(self.tutorial_steps):
             self._complete_tutorial()
             return
 
-        step = TUTORIAL_STEPS[self.current_step_index]
+        step = self.tutorial_steps[self.current_step_index]
 
         # Get target rectangle
         def on_target_rect_ready(target_rect):
@@ -320,10 +360,10 @@ class TutorialManager(QObject):
         if not self.tutorial_active or self.is_paused:
             return
 
-        if self.current_step_index >= len(TUTORIAL_STEPS):
+        if self.current_step_index >= len(self.tutorial_steps):
             return
 
-        step = TUTORIAL_STEPS[self.current_step_index]
+        step = self.tutorial_steps[self.current_step_index]
 
         def on_target_rect_ready(target_rect):
             if target_rect:
@@ -346,16 +386,16 @@ class TutorialManager(QObject):
 
     def _save_progress(self):
         """Save current tutorial progress to Anki config."""
-        config = mw.addonManager.getConfig(__name__) or {}
+        config = mw.addonManager.getConfig(ADDON_NAME) or {}
         config["tutorial_step_index"] = self.current_step_index
-        mw.addonManager.writeConfig(__name__, config)
+        mw.addonManager.writeConfig(ADDON_NAME, config)
 
     def _save_completion(self):
         """Mark tutorial as completed in Anki config."""
-        config = mw.addonManager.getConfig(__name__) or {}
+        config = mw.addonManager.getConfig(ADDON_NAME) or {}
         config["tutorial_completed"] = True
-        config["tutorial_step_index"] = len(TUTORIAL_STEPS)
-        mw.addonManager.writeConfig(__name__, config)
+        config["tutorial_step_index"] = len(self.tutorial_steps)
+        mw.addonManager.writeConfig(ADDON_NAME, config)
 
     def _complete_tutorial(self):
         """

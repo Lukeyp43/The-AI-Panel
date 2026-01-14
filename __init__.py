@@ -1,3 +1,4 @@
+import sys
 import aqt
 from aqt import mw, gui_hooks
 from aqt.qt import *
@@ -11,6 +12,49 @@ dock_widget = None
 current_card_question = ""
 current_card_answer = ""
 is_showing_answer = False
+
+# Platform detection
+IS_MAC = sys.platform == "darwin"
+
+
+def ensure_platform_defaults():
+    """
+    Ensure quick_actions have platform-appropriate defaults.
+    On Mac: Meta (⌘) + F/R
+    On Windows/Linux: Control + F/R
+    """
+    config = mw.addonManager.getConfig(__name__) or {}
+    
+    # Check if quick_actions needs platform-specific defaults
+    quick_actions = config.get("quick_actions", {})
+    needs_update = False
+    
+    # If no quick_actions config exists, or it's using the wrong modifier for this platform
+    if not quick_actions:
+        needs_update = True
+    else:
+        # Check if the modifiers match the platform
+        add_keys = quick_actions.get("add_to_chat", {}).get("keys", [])
+        if IS_MAC and "Control" in add_keys and "Meta" not in add_keys:
+            # Mac but using Control - switch to Meta
+            needs_update = True
+        elif not IS_MAC and "Meta" in add_keys and "Control" not in add_keys:
+            # Windows/Linux but using Meta - switch to Control
+            needs_update = True
+    
+    if needs_update:
+        if IS_MAC:
+            config["quick_actions"] = {
+                "add_to_chat": {"keys": ["Meta", "F"]},
+                "ask_question": {"keys": ["Meta", "R"]}
+            }
+        else:
+            config["quick_actions"] = {
+                "add_to_chat": {"keys": ["Control", "F"]},
+                "ask_question": {"keys": ["Control", "R"]}
+            }
+        mw.addonManager.writeConfig(__name__, config)
+        print(f"OpenEvidence: Set platform-appropriate quick action defaults for {'Mac' if IS_MAC else 'Windows/Linux'}")
 
 
 def create_dock_widget():
@@ -394,6 +438,9 @@ def add_toolbar_button(links, toolbar):
 
 def preload_panel():
     """Preload panel after a short delay to avoid competing with Anki startup"""
+    # Ensure platform-appropriate defaults are set
+    ensure_platform_defaults()
+    
     # Wait 500ms after Anki finishes initializing to start preloading
     # This ensures Anki's UI is responsive while OpenEvidence loads in background
     from aqt.qt import QTimer

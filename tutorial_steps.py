@@ -5,9 +5,11 @@ This module defines the complete tutorial flow as a sequence of steps,
 each with a target, content, and progression trigger.
 """
 
+import sys
 from dataclasses import dataclass
 from typing import Optional, Callable, Any
 from PyQt6.QtCore import QRect, QPoint
+from aqt import mw
 
 from .tutorial_helpers import (
     get_toolbar_icon_rect_async,
@@ -15,6 +17,120 @@ from .tutorial_helpers import (
     get_gear_button_rect,
     get_chat_input_rect_async,
 )
+
+# Addon name for config
+ADDON_NAME = "openevidence_panel"
+
+# Platform detection
+IS_MAC = sys.platform == "darwin"
+
+
+def format_keys(keys: list) -> str:
+    """Format a list of keys into a readable shortcut string.
+    
+    Mac: Uses ⌘ for Meta (Command key), ^Ctrl for Control
+    Windows/Linux: Uses Ctrl for both Meta and Control
+    """
+    if IS_MAC:
+        key_symbols = {
+            "Control": "^Ctrl",
+            "Shift": "Shift", 
+            "Alt": "Alt",
+            "Meta": "⌘",  # Command key on Mac
+        }
+    else:
+        # Windows/Linux
+        key_symbols = {
+            "Control": "Ctrl",
+            "Shift": "Shift", 
+            "Alt": "Alt",
+            "Meta": "Ctrl",  # On Windows, Meta maps to Ctrl for display
+        }
+    
+    formatted = []
+    for key in keys:
+        if key in key_symbols:
+            formatted.append(key_symbols[key])
+        else:
+            formatted.append(key)
+    
+    return "+".join(formatted)
+
+
+def get_quick_action_shortcut(action_name: str) -> str:
+    """Get the formatted shortcut for a quick action (add_to_chat or ask_question)"""
+    try:
+        config = mw.addonManager.getConfig(ADDON_NAME) or {}
+        quick_actions = config.get("quick_actions", {})
+        if action_name in quick_actions:
+            keys = quick_actions[action_name].get("keys", [])
+            return format_keys(keys)
+    except:
+        pass
+    # Platform-appropriate defaults
+    if IS_MAC:
+        if action_name == "add_to_chat":
+            return "⌘F"
+        elif action_name == "ask_question":
+            return "⌘R"
+    else:
+        if action_name == "add_to_chat":
+            return "Ctrl+F"
+        elif action_name == "ask_question":
+            return "Ctrl+R"
+    return ""
+
+
+def get_template_shortcut(template_name: str) -> str:
+    """Get the formatted shortcut for a template by name"""
+    try:
+        config = mw.addonManager.getConfig(ADDON_NAME) or {}
+        keybindings = config.get("keybindings", [])
+        for kb in keybindings:
+            if kb.get("name") == template_name:
+                keys = kb.get("keys", [])
+                return format_keys(keys)
+    except:
+        pass
+    # Platform-appropriate defaults
+    if IS_MAC:
+        defaults = {
+            "Standard Explain": "^Ctrl+Shift+S",
+            "Front/Back": "^Ctrl+Shift+Q",
+            "Back Only": "^Ctrl+Shift+A",
+        }
+    else:
+        defaults = {
+            "Standard Explain": "Ctrl+Shift+S",
+            "Front/Back": "Ctrl+Shift+Q",
+            "Back Only": "Ctrl+Shift+A",
+        }
+    return defaults.get(template_name, "")
+
+
+def get_shortcut_q() -> str:
+    """Get the Front/Back (Q) template shortcut"""
+    return get_template_shortcut("Front/Back")
+
+
+def get_shortcut_a() -> str:
+    """Get the Back Only (A) template shortcut"""
+    return get_template_shortcut("Back Only")
+
+
+def get_shortcut_s() -> str:
+    """Get the Standard Explain (S) template shortcut"""
+    return get_template_shortcut("Standard Explain")
+
+
+def get_shortcut_add_to_chat() -> str:
+    """Get the Add to Chat quick action shortcut"""
+    return get_quick_action_shortcut("add_to_chat")
+
+
+def get_shortcut_ask_question() -> str:
+    """Get the Ask Question quick action shortcut"""
+    return get_quick_action_shortcut("ask_question")
 
 
 @dataclass
@@ -40,8 +156,19 @@ class TutorialStep:
     action_button: Optional[str] = None
 
 
-# Define the complete tutorial sequence
-TUTORIAL_STEPS = [
+def get_tutorial_steps():
+    """
+    Generate tutorial steps with dynamic shortcuts from user config.
+    This is called when the tutorial starts so shortcuts reflect current settings.
+    """
+    # Get current shortcuts from config
+    shortcut_q = get_shortcut_q()
+    shortcut_a = get_shortcut_a()
+    shortcut_s = get_shortcut_s()
+    shortcut_add = get_shortcut_add_to_chat()
+    shortcut_ask = get_shortcut_ask_question()
+    
+    return [
     # ===== SECTION 1: SETUP =====
     
     # Step 1: Click toolbar book icon to toggle panel
@@ -131,7 +258,7 @@ TUTORIAL_STEPS = [
         target_type="none",
         target_ref=None,
         title="Now let's try \"Add to Chat\".",
-        subtext="This adds your highlighted text directly to the chat input.\n\nClick Next, then ⌘ Cmd + highlight some text.",
+        subtext="This adds your highlighted text directly to the chat input.",
         advance_on_event=None,
         action_button="Next"
     ),
@@ -177,7 +304,7 @@ TUTORIAL_STEPS = [
         target_type="none",
         target_ref=None,
         title="There's an even faster way — keyboard shortcuts!",
-        subtext="Instead of ⌘ Cmd + highlight and clicking, just highlight any text and use:\n\n⌘F = Add to Chat\n⌘R = Ask Question",
+        subtext=f"Instead of ⌘ Cmd + highlight and clicking, just highlight any text and use:\n\n{shortcut_add} = Add to Chat\n{shortcut_ask} = Ask Question",
         advance_on_event=None,
         action_button="Show Me"
     ),
@@ -187,8 +314,8 @@ TUTORIAL_STEPS = [
         step_id="use_shortcut",
         target_type="coordinates",
         target_ref=get_reviewer_card_rect,
-        title="Try it! Highlight any text, then press ⌘F or ⌘R.",
-        subtext="⌘F = Add to Chat    ⌘R = Ask Question\n\nNo ⌘ Cmd + highlight needed — just highlight and use the shortcut.",
+        title=f"Try it! Highlight any text, then press {shortcut_add} or {shortcut_ask}.",
+        subtext=f"{shortcut_add} = Add to Chat    {shortcut_ask} = Ask Question\n\nNo ⌘ Cmd + highlight needed — just highlight and use the shortcut.",
         advance_on_event="shortcut_used",
         action_button=None
     ),
@@ -234,17 +361,17 @@ TUTORIAL_STEPS = [
         target_type="none",
         target_ref=None,
         title="Here are the template shortcuts:",
-        subtext="Ctrl+Shift+Q → Send just the front (question)\nCtrl+Shift+A → Send just the back (answer)\nCtrl+Shift+S → Send front & back (\"Explain this\")\n\n⚠️ Click inside the sidebar's text box first!",
+        subtext=f"{shortcut_q} → Send the front (question)\n{shortcut_a} → Send the back (answer)\n{shortcut_s} → Send front & back\n\n⚠️ Click inside the sidebar's text box first!",
         advance_on_event=None,
         action_button="Next"
     ),
 
-    # Step 18: Try Ctrl+Shift+Q (front only) - FIRST
+    # Step 18: Try template Q (front only) - FIRST
     TutorialStep(
         step_id="try_template_q",
         target_type="coordinates",
         target_ref=get_reviewer_card_rect,
-        title="Click in the sidebar's text box, then press Ctrl+Shift+Q.",
+        title=f"Click in the sidebar's text box, then press {shortcut_q}.",
         subtext="This sends only the front (question) of the card.",
         advance_on_event="shortcut_used",
         action_button=None
@@ -256,62 +383,95 @@ TUTORIAL_STEPS = [
         target_type="none",
         target_ref=None,
         title="Nice! You sent just the question.",
-        subtext="Clear the text in the sidebar, then let's try the answer shortcut.",
+        subtext="Now let's clear the sidebar and try the next shortcut.",
         advance_on_event=None,
         action_button="Next"
     ),
 
-    # Step 20: Show answer
+    # Step 20: Clear chat after Q
+    TutorialStep(
+        step_id="clear_chat_after_q",
+        target_type="none",
+        target_ref=None,
+        title="Clear the sidebar's text box.",
+        subtext="Select all the text and delete it.",
+        advance_on_event=None,
+        action_button="Done"
+    ),
+
+    # Step 21: Show answer
     TutorialStep(
         step_id="show_answer",
         target_type="none",
         target_ref=None,
         title="Please reveal the answer on your current card.",
-        subtext="Click \"Show Answer\" below. The next shortcut (Ctrl+Shift+A) sends the back of the card, so both sides need to be visible.",
+        subtext="Click \"Show Answer\" below or press Space to reveal the answer.\n\nThis is important for the next shortcut.",
         advance_on_event="answer_shown",
         action_button=None
     ),
 
-    # Step 21: Try Ctrl+Shift+A (back only) - SECOND
+    # Step 22: Try template A (back only) - SECOND
     TutorialStep(
         step_id="try_template_a",
         target_type="coordinates",
         target_ref=get_reviewer_card_rect,
-        title="Click in the sidebar, then press Ctrl+Shift+A.",
+        title=f"Click in the sidebar, then press {shortcut_a}.",
         subtext="This sends only the back (answer) of the card.",
         advance_on_event="shortcut_used",
         action_button=None
     ),
 
-    # Step 22: Template A success
+    # Step 23: Template A success
     TutorialStep(
         step_id="template_a_success",
         target_type="none",
         target_ref=None,
         title="Great! You sent just the answer.",
-        subtext="Clear the text in the sidebar. One more — this one sends both the question AND answer together.",
+        subtext="One more shortcut to go — this one sends both sides together.",
         advance_on_event=None,
         action_button="Next"
     ),
 
-    # Step 23: Try Ctrl+Shift+S (front & back) - LAST
+    # Step 24: Clear chat after A
+    TutorialStep(
+        step_id="clear_chat_after_a",
+        target_type="none",
+        target_ref=None,
+        title="Clear the sidebar's text box again.",
+        subtext="Select all the text and delete it.",
+        advance_on_event=None,
+        action_button="Done"
+    ),
+
+    # Step 25: Try template S (front & back) - LAST
     TutorialStep(
         step_id="try_template_s",
         target_type="coordinates",
         target_ref=get_reviewer_card_rect,
-        title="Click in the sidebar, then press Ctrl+Shift+S.",
+        title=f"Click in the sidebar, then press {shortcut_s}.",
         subtext="This sends both the question AND answer to OpenEvidence.",
         advance_on_event="shortcut_used",
         action_button=None
     ),
 
-    # Step 24: Templates complete
+    # Step 26: Template S explanation
+    TutorialStep(
+        step_id="template_s_success",
+        target_type="none",
+        target_ref=None,
+        title="Nice! You sent both sides of the card.",
+        subtext="This is the most useful template. It sends the full flashcard to OpenEvidence so you can ask for help understanding it.",
+        advance_on_event=None,
+        action_button="Next"
+    ),
+
+    # Step 27: Templates complete
     TutorialStep(
         step_id="templates_complete",
         target_type="none",
         target_ref=None,
         title="You've learned all the templates! 🎉",
-        subtext="Remember: Click in the sidebar first, then:\n\nCtrl+Shift+Q = Front only\nCtrl+Shift+A = Back only\nCtrl+Shift+S = Front & Back",
+        subtext=f"Remember: Click in the sidebar first, then:\n\n{shortcut_q} = Front only\n{shortcut_a} = Back only\n{shortcut_s} = Front & Back",
         advance_on_event=None,
         action_button="Next"
     ),
@@ -412,7 +572,7 @@ TUTORIAL_STEPS = [
         target_type="none",
         target_ref=None,
         title="These are your Quick Action shortcuts.",
-        subtext="Remember ⌘F (Add to Chat) and ⌘R (Ask Question)? You can change these shortcuts here if you'd like.",
+        subtext=f"Remember {shortcut_add} (Add to Chat) and {shortcut_ask} (Ask Question)? You can change these shortcuts here if you'd like.",
         advance_on_event=None,
         action_button="Next"
     ),
@@ -444,8 +604,8 @@ TUTORIAL_STEPS = [
         step_id="signup_recommendation",
         target_type="none",
         target_ref=None,
-        title="One last tip!",
-        subtext="We recommend signing in or creating a free OpenEvidence account to save your chat history.\n\nDon't worry — we store cookies so you'll stay logged in automatically!",
+        title="Important: Create an account or log in!",
+        subtext="Without an account, you'll get blocked after a few questions.\n\nIf you already have one, just log in. If not, signing up is 100% free and takes 30 seconds.\n\n(I'm not affiliated with them — it's just really good!)",
         advance_on_event=None,
         action_button="Next"
     ),
@@ -482,7 +642,11 @@ TUTORIAL_STEPS = [
         advance_on_event=None,
         action_button="Finish"
     ),
-]
+    ]
+
+
+# For backwards compatibility - generate steps on first import
+TUTORIAL_STEPS = get_tutorial_steps()
 
 
 def get_step_target_rect(step: TutorialStep, callback: Callable[[Optional[QRect]], None]):

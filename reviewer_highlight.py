@@ -5,6 +5,9 @@ Shows a floating action bar when text is highlighted on flashcards
 
 from aqt import mw, gui_hooks
 
+# Addon name for config storage (must match folder name, not __name__)
+ADDON_NAME = "openevidence_panel"
+
 
 # JavaScript code to inject into the reviewer
 HIGHLIGHT_BUBBLE_JS = """
@@ -786,7 +789,7 @@ def inject_highlight_bubble(html, card, context):
     if context in ("reviewQuestion", "reviewAnswer"):
         # Load shortcuts from config
         from aqt import mw
-        config = mw.addonManager.getConfig(__name__) or {}
+        config = mw.addonManager.getConfig(ADDON_NAME) or {}
         quick_actions = config.get("quick_actions", {
             "add_to_chat": {"keys": ["Meta", "F"]},
             "ask_question": {"keys": ["Meta", "R"]}

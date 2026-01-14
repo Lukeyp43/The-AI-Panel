@@ -6,6 +6,9 @@ import sys
 from aqt import mw
 from aqt.utils import tooltip
 
+# Addon name for config storage (must match folder name, not __name__)
+ADDON_NAME = "openevidence_panel"
+
 try:
     from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea
     from PyQt6.QtCore import Qt, QTimer
@@ -29,7 +32,7 @@ class QuickActionsSettingsView(KeyRecorderMixin, QWidget):
         self.setup_key_recorder()
 
         # Load current shortcuts from config
-        config = mw.addonManager.getConfig(__name__) or {}
+        config = mw.addonManager.getConfig(ADDON_NAME) or {}
         self.shortcuts = config.get("quick_actions", {
             "add_to_chat": {"keys": ["Meta", "F"]},
             "ask_question": {"keys": ["Meta", "R"]}
@@ -261,7 +264,7 @@ class QuickActionsSettingsView(KeyRecorderMixin, QWidget):
 
     def save_shortcuts(self):
         """Save shortcuts to config"""
-        config = mw.addonManager.getConfig(__name__)
+        config = mw.addonManager.getConfig(ADDON_NAME)
         config["quick_actions"] = self.shortcuts
         mw.addonManager.writeConfig(__name__, config)
 
@@ -280,7 +283,7 @@ class QuickActionsSettingsView(KeyRecorderMixin, QWidget):
         from aqt import mw
         
         # Get the current config
-        config = mw.addonManager.getConfig(__name__)
+        config = mw.addonManager.getConfig(ADDON_NAME)
         quick_actions = config.get("quick_actions", {
             "add_to_chat": {"keys": ["Meta", "F"]},
             "ask_question": {"keys": ["Meta", "R"]}

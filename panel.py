@@ -3,6 +3,9 @@ import webbrowser
 from aqt import mw
 from aqt.qt import *
 
+# Addon name for config storage (must match folder name, not __name__)
+ADDON_NAME = "openevidence_panel"
+
 try:
     from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
                                   QDockWidget, QStackedWidget)
@@ -894,7 +897,7 @@ class OpenEvidencePanel(QWidget):
     def update_keybindings_in_js(self):
         """Update the keybindings in the JavaScript context without re-injecting the listener"""
         # Get keybindings from config
-        config = mw.addonManager.getConfig(__name__) or {}
+        config = mw.addonManager.getConfig(ADDON_NAME) or {}
         keybindings = config.get("keybindings", [])
 
         # If no keybindings, add default
@@ -934,7 +937,7 @@ class OpenEvidencePanel(QWidget):
         from . import current_card_question, current_card_answer, is_showing_answer
 
         # Get keybindings from config
-        config = mw.addonManager.getConfig(__name__) or {}
+        config = mw.addonManager.getConfig(ADDON_NAME) or {}
         keybindings = config.get("keybindings", [])
 
         # If no keybindings, add default
@@ -1284,12 +1287,12 @@ class OnboardingWidget(QWidget):
         """Complete onboarding and show the panel"""
         # Save config - ensure it's properly saved
         try:
-            config = mw.addonManager.getConfig(__name__) or {}
+            config = mw.addonManager.getConfig(ADDON_NAME) or {}
             config["onboarding_completed"] = True
-            mw.addonManager.writeConfig(__name__, config)
+            mw.addonManager.writeConfig(ADDON_NAME, config)
             
             # Verify it was saved
-            saved_config = mw.addonManager.getConfig(__name__) or {}
+            saved_config = mw.addonManager.getConfig(ADDON_NAME) or {}
             if saved_config.get("onboarding_completed"):
                 print(f"OpenEvidence: Onboarding completed successfully, config saved")
             else:

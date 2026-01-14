@@ -60,6 +60,16 @@ def skip_tutorial():
     manager.skip_tutorial()
 
 
+def restart_tutorial():
+    """
+    Restart the tutorial from the beginning.
+
+    Resets progress and starts the tutorial fresh, even if previously completed.
+    """
+    manager = get_tutorial_manager()
+    manager.restart_tutorial()
+
+
 def is_tutorial_active():
     """
     Check if the tutorial is currently active.

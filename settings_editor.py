@@ -6,6 +6,9 @@ import sys
 from aqt import mw
 from aqt.utils import tooltip
 
+# Addon name for config storage (must match folder name, not __name__)
+ADDON_NAME = "openevidence_panel"
+
 try:
     from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea, QTextEdit
     from PyQt6.QtCore import Qt, QTimer
@@ -399,7 +402,7 @@ class SettingsEditorView(KeyRecorderMixin, QWidget):
         answer_template = self.answer_template.toPlainText().strip()
 
         # Check for duplicate keybindings
-        config = mw.addonManager.getConfig(__name__) or {}
+        config = mw.addonManager.getConfig(ADDON_NAME) or {}
         keybindings = config.get("keybindings", [])
         current_keys = self.keybinding.get("keys", [])
 

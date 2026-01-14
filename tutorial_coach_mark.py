@@ -172,7 +172,7 @@ class CoachMark(QWidget):
         
         # Add margins (20 top + 16 bottom)
         total_content_height = content_height + 36
-        
+
         # Add space for arrow if needed
         arrow_space = 15 if self.arrow_direction in ["top", "bottom"] else 0
         
