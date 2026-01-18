@@ -938,31 +938,48 @@ class OpenEvidencePanel(QWidget):
                     // Only track if in input or textarea that looks like a chat input
                     if (tagName === 'input' || tagName === 'textarea') {
                         var placeholder = (target.placeholder || '').toLowerCase();
-                        // Check if it looks like a chat/search input
+                        var value = (target.value || '').trim();
+                        // Check if it looks like a chat/search input OR has content to send
                         if (placeholder.includes('question') || placeholder.includes('search') || 
                             placeholder.includes('ask') || placeholder.includes('message') ||
-                            placeholder.includes('medical')) {
+                            placeholder.includes('medical') || placeholder.includes('follow') ||
+                            value.length > 0) {
                             trackMessage();
                         }
                     }
                 }
             }, true);
             
-            // Track clicks on send/submit buttons
+            // Track clicks on send/submit buttons (including icon-only buttons)
             document.addEventListener('click', function(event) {
                 var target = event.target;
-                // Walk up to find button
+                // Walk up to find button (also check for SVG clicks inside buttons)
                 while (target && target.tagName !== 'BUTTON' && target !== document.body) {
                     target = target.parentElement;
                 }
                 if (target && target.tagName === 'BUTTON') {
                     var buttonText = (target.textContent || '').toLowerCase();
                     var ariaLabel = (target.getAttribute('aria-label') || '').toLowerCase();
-                    // Check if it's a send/submit button
+                    var buttonType = (target.getAttribute('type') || '').toLowerCase();
+                    var hasSvg = target.querySelector('svg') !== null;
+                    var className = (target.className || '').toLowerCase();
+                    
+                    // Check if it's a send/submit button (text, aria-label, type, or icon button)
                     if (buttonText.includes('send') || buttonText.includes('submit') ||
                         buttonText.includes('ask') || ariaLabel.includes('send') ||
-                        ariaLabel.includes('submit')) {
+                        ariaLabel.includes('submit') || buttonType === 'submit' ||
+                        (hasSvg && (className.includes('send') || className.includes('submit') || 
+                         className.includes('primary') || className.includes('action')))) {
                         trackMessage();
+                    }
+                    
+                    // Also track if button is near an input/textarea (likely a send button)
+                    var parent = target.parentElement;
+                    if (parent) {
+                        var hasInputSibling = parent.querySelector('input, textarea') !== null;
+                        if (hasInputSibling && hasSvg) {
+                            trackMessage();
+                        }
                     }
                 }
             }, true);

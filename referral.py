@@ -8,12 +8,14 @@ from aqt import mw
 
 try:
     from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QDialog, QGraphicsDropShadowEffect
-    from PyQt6.QtCore import Qt, QTimer, QByteArray, QPropertyAnimation, QRect, QEasingCurve, QRectF
-    from PyQt6.QtGui import QCursor, QPixmap, QPainter, QColor, QBrush, QPalette, QPainterPath
+    from PyQt6.QtCore import Qt, QTimer, QByteArray, QPropertyAnimation, QRect, QEasingCurve, QRectF, QSize
+    from PyQt6.QtGui import QCursor, QPixmap, QPainter, QColor, QBrush, QPalette, QPainterPath, QIcon
+    from PyQt6.QtSvg import QSvgRenderer
 except ImportError:
     from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QDialog, QGraphicsDropShadowEffect
-    from PyQt5.QtCore import Qt, QTimer, QByteArray, QPropertyAnimation, QRect, QEasingCurve, QRectF
-    from PyQt5.QtGui import QCursor, QPixmap, QPainter, QColor, QBrush, QPalette, QPainterPath
+    from PyQt5.QtCore import Qt, QTimer, QByteArray, QPropertyAnimation, QRect, QEasingCurve, QRectF, QSize
+    from PyQt5.QtGui import QCursor, QPixmap, QPainter, QColor, QBrush, QPalette, QPainterPath, QIcon
+    from PyQt5.QtSvg import QSvgRenderer
 
 ADDON_NAME = "the_ai_panel"
 
@@ -211,7 +213,7 @@ class ReferralOverlay(QWidget):
         self.setGeometry(start_rect)
         
         self.animation = QPropertyAnimation(self, b"geometry")
-        self.animation.setDuration(600)
+        self.animation.setDuration(1600)  # Slower slide-down (1.6 seconds)
         self.animation.setStartValue(start_rect)
         self.animation.setEndValue(end_rect)
         self.animation.setEasingCurve(QEasingCurve.Type.OutExpo)
@@ -359,10 +361,30 @@ class ReferralOverlay(QWidget):
         btn_layout.setContentsMargins(0, 0, 0, 0)
         btn_layout.setSpacing(12)
         
-        # Done button - starts LOCKED
-        self.done_btn = QPushButton("🔒 Claim Good Luck")
+        # Done button - starts LOCKED with SVG lock icon
+        self.done_btn = QPushButton(" Claim Good Luck")
         self.done_btn.setEnabled(False)  # Disabled initially
         self.done_btn.setCursor(QCursor(Qt.CursorShape.ForbiddenCursor))
+        
+        # Create high-def lock icon from SVG
+        lock_svg = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#888888">
+            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+        </svg>'''
+        svg_bytes = QByteArray(lock_svg.encode())
+        renderer = QSvgRenderer(svg_bytes)
+        # Render at high resolution (48x48) for crispness
+        pixmap = QPixmap(48, 48)
+        try:
+            pixmap.fill(Qt.GlobalColor.transparent)
+        except:
+            pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+        renderer.render(painter)
+        painter.end()
+        self.lock_icon = QIcon(pixmap)
+        self.done_btn.setIcon(self.lock_icon)
+        self.done_btn.setIconSize(QSize(18, 18))
+        
         self.done_btn.setStyleSheet("""
             QPushButton {
                 background: #333333;
@@ -408,8 +430,8 @@ class ReferralOverlay(QWidget):
         main_layout.addWidget(container, 0, Qt.AlignmentFlag.AlignHCenter)
         main_layout.addStretch()
         
-        # === START ANIMATION SEQUENCE ===
-        self.start_typing_sequence()
+        # === START ANIMATION SEQUENCE (with delay) ===
+        QTimer.singleShot(1200, self.start_typing_sequence)  # Wait 1200ms after slide-down
     
     def start_typing_sequence(self):
         """Begin the animated typing sequence."""
@@ -499,12 +521,13 @@ class ReferralOverlay(QWidget):
         self.btn_container.show()  # Show buttons immediately with QR
         
         # Unlock button after 12 seconds
-        QTimer.singleShot(12000, self.unlock_button)
+        QTimer.singleShot(18000, self.unlock_button)  # 18 seconds
     
     def unlock_button(self):
-        """Unlock the done button after 12 seconds."""
+        """Unlock the done button after 15 seconds."""
         self.done_btn.setEnabled(True)
         self.done_btn.setText("I sent it (Claim Good Luck)")
+        self.done_btn.setIcon(QIcon())  # Remove lock icon
         self.done_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.done_btn.setStyleSheet("""
             QPushButton {
