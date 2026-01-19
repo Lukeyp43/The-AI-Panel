@@ -306,7 +306,7 @@ class TutorialManager(QObject):
             from anki.collection import Collection
 
             # Create or get the demo deck
-            deck_name = "The AI Panel Demo"
+            deck_name = "AI Side Panel Demo"
             deck_id = mw.col.decks.id(deck_name)
 
             # Check if deck already has cards

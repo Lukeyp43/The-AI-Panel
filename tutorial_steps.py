@@ -188,7 +188,7 @@ def get_tutorial_steps():
         step_id="create_demo_deck",
         target_type="none",
         target_ref=None,
-        title="Let's create a practice deck to test The AI Panel features.",
+        title="Let's create a practice deck to test AI Side Panel features.",
         subtext="This will add sample medical flashcards for you to try.",
         advance_on_event=None,
         action_button="Create Practice Deck"
@@ -245,7 +245,7 @@ def get_tutorial_steps():
         step_id="ask_question_success",
         target_type="none",
         target_ref=None,
-        title="Great! The AI Panel is generating a response.",
+        title="Great! AI Side Panel is generating a response.",
         subtext="This is the fastest way to get answers — just highlight and ask!",
         advance_on_event=None,
         action_button="Next"
@@ -340,7 +340,7 @@ def get_tutorial_steps():
         target_type="none",
         target_ref=None,
         title="First, let's start fresh.",
-        subtext="Click The AI Panel logo in the top left of the sidebar to go back to the home screen.",
+        subtext="Click AI Side Panel logo in the top left of the sidebar to go back to the home screen.",
         advance_on_event=None,
         action_button="Done"
     ),
@@ -351,7 +351,7 @@ def get_tutorial_steps():
         target_type="none",
         target_ref=None,
         title="Next up: Templates",
-        subtext="Templates let you send your flashcard to The AI Panel with a simple keyboard shortcut.\n\nNo highlighting needed — just press a key combo!",
+        subtext="Templates let you send your flashcard to AI Side Panel with a simple keyboard shortcut.\n\nNo highlighting needed — just press a key combo!",
         advance_on_event=None,
         action_button="Next"
     ),
@@ -450,7 +450,7 @@ def get_tutorial_steps():
         target_type="coordinates",
         target_ref=get_reviewer_card_rect,
         title=f"Click in the sidebar, then press {shortcut_s}.",
-        subtext="This sends both the question AND answer to The AI Panel.",
+        subtext="This sends both the question AND answer to AI Side Panel.",
         advance_on_event="shortcut_used",
         action_button=None
     ),
@@ -461,7 +461,7 @@ def get_tutorial_steps():
         target_type="none",
         target_ref=None,
         title="Nice! You sent both sides of the card.",
-        subtext="This is the most useful template. It sends the full flashcard to The AI Panel so you can ask for help understanding it.",
+        subtext="This is the most useful template. It sends the full flashcard to AI Side Panel so you can ask for help understanding it.",
         advance_on_event=None,
         action_button="Next"
     ),
@@ -529,7 +529,7 @@ def get_tutorial_steps():
         target_type="none",
         target_ref=None,
         title="When you edit a template, you can:",
-        subtext="• Change the keyboard shortcut\n• Edit the text that gets sent to The AI Panel\n• Delete templates you don't need",
+        subtext="• Change the keyboard shortcut\n• Edit the text that gets sent to AI Side Panel\n• Delete templates you don't need",
         advance_on_event=None,
         action_button="Next"
     ),
@@ -594,7 +594,7 @@ def get_tutorial_steps():
         step_id="go_back_to_ai_panel",
         target_type="none",
         target_ref=None,
-        title="Click the back arrow one more time to return to The AI Panel.",
+        title="Click the back arrow one more time to return to AI Side Panel.",
         subtext=None,
         advance_on_event="panel_web_view",
         action_button=None
@@ -617,7 +617,7 @@ def get_tutorial_steps():
         target_type="none",
         target_ref=None,
         title="Don't worry — it's 100% free forever!",
-        subtext="Creating an account is completely free and always will be. The AI Panel is free for medical students and MDs when you sign up.",
+        subtext="Creating an account is completely free and always will be. AI Side Panel is free for medical students and MDs when you sign up.",
         advance_on_event=None,
         action_button="Next"
     ),

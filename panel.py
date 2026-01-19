@@ -204,7 +204,7 @@ class CustomTitleBar(QWidget):
         layout.addWidget(self.back_button)
 
         # Title label
-        self.title_label = QLabel("The AI Panel")
+        self.title_label = QLabel("AI Side Panel")
         self.title_label.setStyleSheet("color: rgba(255, 255, 255, 0.9); font-size: 13px; font-weight: 500;")
         layout.addWidget(self.title_label)
 
@@ -369,7 +369,7 @@ class CustomTitleBar(QWidget):
             self.settings_button.setVisible(False)
         else:
             # Web view mode
-            self.title_label.setText("The AI Panel")
+            self.title_label.setText("AI Side Panel")
             self.back_button.setVisible(False)
             self.settings_button.setVisible(True)
 
@@ -1323,7 +1323,7 @@ class OnboardingWidget(QWidget):
         layout.setSpacing(0)
 
         # Title/Headline
-        title = QLabel("The AI Panel")
+        title = QLabel("AI Side Panel")
         title.setStyleSheet("""
             font-size: 32px;
             font-weight: 700;

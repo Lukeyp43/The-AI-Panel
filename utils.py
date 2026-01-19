@@ -1,5 +1,5 @@
 """
-Utility functions for The AI Panel add-on.
+Utility functions for AI Side Panel add-on.
 """
 
 import re

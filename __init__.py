@@ -67,7 +67,7 @@ def create_dock_widget():
 
     if dock_widget is None:
         # Create the dock widget
-        dock_widget = QDockWidget("The AI Panel", mw)
+        dock_widget = QDockWidget("AI Side Panel", mw)
         dock_widget.setObjectName("AIPanelDock")
 
         # Check if onboarding is complete
@@ -440,9 +440,9 @@ def add_toolbar_button(links, toolbar):
 </svg>
 """
 
-    # Add the AI Panel panel button
+    # Add AI Side Panel panel button
     links.append(
-        f'<a class="hitem" href="#" onclick="pycmd(\'openevidence\'); return false;" title="The AI Panel">{open_book_icon}</a>'
+        f'<a class="hitem" href="#" onclick="pycmd(\'openevidence\'); return false;" title="AI Side Panel">{open_book_icon}</a>'
     )
 
 

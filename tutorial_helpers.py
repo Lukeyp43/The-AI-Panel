@@ -11,7 +11,7 @@ from aqt import mw
 
 def get_toolbar_icon_rect_async(callback):
     """
-    Asynchronously get the rectangle of the AI Panel toolbar icon.
+    Asynchronously get the rectangle of AI Side Panel toolbar icon.
 
     Uses JavaScript to query the DOM for the button position.
 
@@ -22,7 +22,7 @@ def get_toolbar_icon_rect_async(callback):
         callback(None)
         return
 
-    # JavaScript to get the AI Panel button's bounding box
+    # JavaScript to get AI Side Panel button's bounding box
     js_code = """
     (function() {
         // Find the link with onclick="pycmd('openevidence')"
@@ -169,7 +169,7 @@ def get_reviewer_card_rect():
 
 def get_panel_web_view():
     """
-    Get the AI Panel panel's web view widget.
+    Get AI Side Panel panel's web view widget.
 
     Returns:
         QWebEngineView widget, or None if not available
@@ -189,7 +189,7 @@ def get_panel_web_view():
 
 def get_panel_global_pos():
     """
-    Get the global position of the AI Panel panel.
+    Get the global position of AI Side Panel panel.
 
     Returns:
         QPoint in global screen coordinates, or None if panel not available
@@ -277,7 +277,7 @@ def get_panel_rect():
 
 def is_panel_visible():
     """
-    Check if the AI Panel panel is currently visible.
+    Check if AI Side Panel panel is currently visible.
 
     Returns:
         bool: True if panel is visible, False otherwise
