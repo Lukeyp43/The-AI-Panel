@@ -205,12 +205,25 @@ def track_message_sent():
     if isinstance(todays_sessions, dict) or isinstance(todays_sessions, int):
         todays_sessions = []
     
-    # If we have a valid session index, update it
+    # If session index is invalid, try to recover
+    if _current_session_index < 0 or _current_session_index >= len(todays_sessions):
+        if len(todays_sessions) > 0:
+            # Use the last session for today
+            _current_session_index = len(todays_sessions) - 1
+        else:
+            # No sessions today - create one
+            current_time = datetime.now().strftime("%H:%M:%S")
+            todays_sessions.append({"time": current_time, "messages": 0})
+            _current_session_index = 0
+            daily_usage[today] = todays_sessions
+    
+    # Now update the message count
     if _current_session_index >= 0 and _current_session_index < len(todays_sessions):
         todays_sessions[_current_session_index]["messages"] = todays_sessions[_current_session_index].get("messages", 0) + 1
         daily_usage[today] = todays_sessions
         analytics["daily_usage"] = daily_usage
         save_analytics_data(analytics)
+        print(f"AI Panel: Tracked message - session {_current_session_index}, total messages: {todays_sessions[_current_session_index]['messages']}")
 
 
 def track_anki_open():
