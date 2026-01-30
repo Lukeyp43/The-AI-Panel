@@ -249,9 +249,10 @@ class ReferralOverlay(QWidget):
         # Add top spacing (stretch to center vertically)
         main_layout.addStretch()
         
-        # Content container (left-aligned text)
+        # Content container (left-aligned text) - responsive width
         container = QWidget()
-        container.setMaximumWidth(380)
+        container.setMinimumWidth(280)
+        container.setMaximumWidth(500)
         container.setStyleSheet("background: transparent;")
         content_layout = QVBoxLayout(container)
         content_layout.setContentsMargins(28, 0, 28, 0)
@@ -259,17 +260,18 @@ class ReferralOverlay(QWidget):
         
         # === ANIMATED TEXT LABELS ===
         
-        # Intro label (will type then delete)
+        # Intro label (will type then delete) - allows wrapping
         self.intro_label = QLabel("")
-        self.intro_label.setFixedHeight(30)  # Fixed height prevents resizing/flicker
+        self.intro_label.setMinimumHeight(120)  # Enough height for 3 lines with spacing
         self.intro_label.setStyleSheet(f"""
             font-size: 16px;
             font-weight: 500;
             color: {c['text_secondary']};
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.4;
         """)
-        self.intro_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        self.intro_label.setWordWrap(False)  # Keep on single line
+        self.intro_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.intro_label.setWordWrap(True)  # Enable word wrap
         content_layout.addWidget(self.intro_label)
         
         content_layout.addSpacing(8)
@@ -369,7 +371,7 @@ class ReferralOverlay(QWidget):
         btn_layout.setSpacing(12)
         
         # Done button - starts LOCKED with SVG lock icon
-        self.done_btn = QPushButton(" Claim Good Luck")
+        self.done_btn = QPushButton(" Lock In My Luck")
         self.done_btn.setEnabled(False)  # Disabled initially
         self.done_btn.setCursor(QCursor(Qt.CursorShape.ForbiddenCursor))
         
@@ -442,65 +444,103 @@ class ReferralOverlay(QWidget):
     
     def start_typing_sequence(self):
         """Begin the animated typing sequence."""
-        self.intro_text = "Wait, I'm so sorry to interrupt..."
-        self.headline_text = "Quick question... do you want to lock in good luck on your next exam?"
-        self.body_text = "Please share this add-on with a friend or put it in your group chat for extra luck."
-        self.instruction_text = "Scan with your phone. It pre-fills a text and just change the recipient to a friend and hit send. (The button below will unlock once you do)."
+        # Intro lines that will be deleted (all typed out, then all deleted)
+        self.intro_lines = [
+            "So so so sorry to interrupt...",
+            "I know you have an exam coming up soon. Share this add-on to lock in good luck."
+        ]
+        self.current_intro_index = 0
+        self.full_intro_text = ""  # Accumulates all typed lines
         
-        # Phase 1: Type intro
+        # Main content that stays
+        self.headline_text = "You've been studying hard. Don't let bad luck undo all that work."
+        self.body_text = "247 students locked in their luck this week by sharing this add-on. Send this add-on to a friend or your study gc to do the same."
+        self.instruction_text = "Scan with your phone. It pre-fills a text - just change the recipient to a friend and hit send. (The button below unlocks once you do)."
+        
+        # Start with first intro line
+        self.start_intro_line()
+    
+    def start_intro_line(self):
+        """Type the current intro line (appending to previous lines)."""
+        if self.current_intro_index >= len(self.intro_lines):
+            # All intro lines done, pause then delete everything
+            QTimer.singleShot(1500, self.delete_all_intro)
+            return
+        
+        # Add line break before 2nd and 3rd lines
+        if self.current_intro_index > 0:
+            self.full_intro_text += "\n\n"
+        
         self.typing_index = 0
-        self.current_target = self.intro_text
-        self.current_label = self.intro_label
+        self.current_target = self.intro_lines[self.current_intro_index]
+        self.intro_label.show()
         self.typing_timer = QTimer()
-        self.typing_timer.timeout.connect(self.type_character)
-        self.typing_timer.start(90)  # 90ms per character (slower, readable pace)
+        self.typing_timer.timeout.connect(self.type_intro_character)
+        self.typing_timer.start(55)  # Slightly faster for multiple lines
+    
+    def type_intro_character(self):
+        """Type one character for intro lines (stacking all lines)."""
+        if self.typing_index < len(self.current_target):
+            # Append character to full text and display
+            display_text = self.full_intro_text + self.current_target[:self.typing_index + 1]
+            self.intro_label.setText(display_text)
+            self.typing_index += 1
+        else:
+            self.typing_timer.stop()
+            # Save the completed line to full text
+            self.full_intro_text += self.current_target
+            self.current_intro_index += 1
+            # Pause, then start next intro line (adding to existing text)
+            QTimer.singleShot(800, self.start_intro_line)
+    
+    def delete_all_intro(self):
+        """Delete all intro text with backspace animation."""
+        self.is_deleting = True
+        self.typing_timer = QTimer()
+        self.typing_timer.timeout.connect(self.backspace_intro)
+        self.typing_timer.start(15)  # Very fast backspace for all text
+    
+    def backspace_intro(self):
+        """Backspace one character at a time from all intro text."""
+        current = self.intro_label.text()
+        if len(current) > 0:
+            self.intro_label.setText(current[:-1])
+        else:
+            self.typing_timer.stop()
+            self.is_deleting = False
+            self.intro_label.hide()
+            QTimer.singleShot(300, self.start_headline_phase)
     
     def type_character(self):
-        """Type one character at a time."""
-        if self.is_deleting:
-            # Backspace mode
-            current = self.current_label.text()
-            if len(current) > 0:
-                self.current_label.setText(current[:-1])
-            else:
-                self.typing_timer.stop()
-                self.is_deleting = False
-                # Move to headline phase
-                QTimer.singleShot(200, self.start_headline_phase)
+        """Type one character at a time for main content."""
+        if self.typing_index < len(self.current_target):
+            self.current_label.setText(self.current_target[:self.typing_index + 1])
+            self.typing_index += 1
         else:
-            # Typing mode
-            if self.typing_index < len(self.current_target):
-                self.current_label.setText(self.current_target[:self.typing_index + 1])
-                self.typing_index += 1
-            else:
-                self.typing_timer.stop()
-                # If this was the intro, pause then delete
-                if self.current_label == self.intro_label:
-                    QTimer.singleShot(1500, self.start_backspace)  # 1.5s pause to read
-                elif self.current_label == self.headline_label:
-                    QTimer.singleShot(800, self.start_body_phase)
-                elif self.current_label == self.body_label:
-                    QTimer.singleShot(800, self.start_instruction_phase)
-                elif self.current_label == self.instruction_label:
-                    QTimer.singleShot(800, self.show_qr_code)
+            self.typing_timer.stop()
+            if self.current_label == self.headline_label:
+                QTimer.singleShot(800, self.start_body_phase)
+            elif self.current_label == self.body_label:
+                QTimer.singleShot(800, self.start_instruction_phase)
+            elif self.current_label == self.instruction_label:
+                QTimer.singleShot(800, self.show_qr_code)
     
     def start_backspace(self):
         """Start deleting the intro text."""
         self.is_deleting = True
         self.typing_timer = QTimer()
         self.typing_timer.timeout.connect(self.type_character)
-        self.typing_timer.start(50)  # 50ms backspace
+        self.typing_timer.start(50)
     
     def start_headline_phase(self):
         """Show and type headline."""
-        self.intro_label.hide()
         self.headline_label.show()
         self.typing_index = 0
         self.current_target = self.headline_text
         self.current_label = self.headline_label
         self.typing_timer = QTimer()
         self.typing_timer.timeout.connect(self.type_character)
-        self.typing_timer.start(75)  # 75ms for headline
+        self.typing_timer.start(60)
     
     def start_body_phase(self):
         """Show and type body text."""
@@ -510,7 +550,7 @@ class ReferralOverlay(QWidget):
         self.current_label = self.body_label
         self.typing_timer = QTimer()
         self.typing_timer.timeout.connect(self.type_character)
-        self.typing_timer.start(65)  # 65ms body text
+        self.typing_timer.start(50)
     
     def start_instruction_phase(self):
         """Show and type instruction text."""
@@ -520,7 +560,7 @@ class ReferralOverlay(QWidget):
         self.current_label = self.instruction_label
         self.typing_timer = QTimer()
         self.typing_timer.timeout.connect(self.type_character)
-        self.typing_timer.start(70)  # 70ms instruction text
+        self.typing_timer.start(50)
     
     def show_qr_code(self):
         """Show QR code and buttons (button starts locked)."""
@@ -533,7 +573,7 @@ class ReferralOverlay(QWidget):
     def unlock_button(self):
         """Unlock the done button after 15 seconds."""
         self.done_btn.setEnabled(True)
-        self.done_btn.setText("I sent it (Claim Good Luck)")
+        self.done_btn.setText("I sent it (Lock In My Luck)")
         self.done_btn.setIcon(QIcon())  # Remove lock icon
         self.done_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         c = ThemeManager.get_palette()

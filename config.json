@@ -1,6 +1,8 @@
 {
-    "referral_threshold": 4,
+    "referral_threshold": 2,
     "referral_days_threshold": 3,
+    "review_days_threshold": 8,
+    "review_message_threshold": 3,
     "width": 500,
     "height_percentage": 0.9,
     "onboarding_completed": false,

@@ -90,12 +90,15 @@ class TutorialAwarePage(QWebEnginePage):
                 
                 # Check if we should show referral overlay (after tracking message)
                 from .referral import show_referral_overlay_if_eligible
+                # Check if we should show review overlay (after referral)
+                from .review import show_review_overlay_if_eligible
                 # Use QTimer to show overlay after JS processing completes
                 from aqt.qt import QTimer
                 # Get the parent OpenEvidencePanel widget
                 panel = self.parent()
                 if panel:
-                    QTimer.singleShot(500, lambda: show_referral_overlay_if_eligible(panel))
+                    # Try referral first, then review (only one will show based on eligibility)
+                    QTimer.singleShot(500, lambda: show_referral_overlay_if_eligible(panel) or show_review_overlay_if_eligible(panel))
             except Exception as e:
                 print(f"AI Panel: Error in message tracking: {e}")
         # Call parent implementation for normal logging
@@ -468,7 +471,7 @@ class OpenEvidencePanel(QWidget):
         # Set up auth detection timer (check every 30 seconds)
         self.auth_check_timer = QTimer(self)
         self.auth_check_timer.timeout.connect(self.check_auth_status)
-        self.auth_check_timer.start(30000)  # 30 seconds
+        self.auth_check_timer.start(300000)  # 5 minutes
 
     def on_page_load_finished(self, ok):
         """Called when page HTML is loaded - check if fully ready"""
@@ -550,61 +553,41 @@ class OpenEvidencePanel(QWidget):
                 self.auth_check_timer.stop()
             return
 
-        # JavaScript to check for authentication tokens/cookies
-        # More strict check - look for actual auth tokens, not just any key with "user" in it
+        # JavaScript to check for authentication by DOM elements (not tokens)
+        # More reliable - checks if Login/SignUp buttons are present (logged out)
+        # vs if Avatar/Sidebar elements are present (logged in)
         auth_check_js = """
         (function() {
-            // Check localStorage for auth tokens (strict matching)
             try {
-                var keys = Object.keys(localStorage);
-                for (var i = 0; i < keys.length; i++) {
-                    var key = keys[i].toLowerCase();
-                    // Only match keys that are LIKELY auth tokens (more specific)
-                    // Must contain "token" or "auth" or "jwt", not just "user" or "session"
-                    if ((key.includes('token') || key.includes('auth') || key.includes('jwt')) &&
-                        !key.includes('csrf')) {  // Exclude CSRF tokens
-                        var value = localStorage.getItem(keys[i]);
-                        // Check if value looks like a JWT or auth token (longer, contains dots or dashes)
-                        if (value && value.length > 50 && (value.includes('.') || value.includes('-'))) {
-                            return true;
-                        }
-                    }
+                // 1. Check if Login/SignUp buttons exist (means NOT logged in)
+                var buttons = Array.from(document.querySelectorAll('button'));
+                var loginButton = buttons.find(function(el) { 
+                    return el.innerText && el.innerText.includes('Log In'); 
+                });
+                var signupButton = buttons.find(function(el) { 
+                    return el.innerText && el.innerText.includes('Sign Up'); 
+                });
+                
+                // If both login buttons are present, user is NOT logged in
+                if (loginButton && signupButton) {
+                    return false;
                 }
-            } catch(e) {}
-
-            // Check sessionStorage for auth tokens (strict matching)
-            try {
-                var keys = Object.keys(sessionStorage);
-                for (var i = 0; i < keys.length; i++) {
-                    var key = keys[i].toLowerCase();
-                    if ((key.includes('token') || key.includes('auth') || key.includes('jwt')) &&
-                        !key.includes('csrf')) {
-                        var value = sessionStorage.getItem(keys[i]);
-                        if (value && value.length > 50 && (value.includes('.') || value.includes('-'))) {
-                            return true;
-                        }
-                    }
-                }
-            } catch(e) {}
-
-            // Check cookies for auth (look for specific auth cookie patterns)
-            try {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = cookies[i].trim();
-                    var cookieName = cookie.split('=')[0].toLowerCase();
-                    var cookieValue = cookie.split('=')[1] || '';
-
-                    // Only match cookies that look like auth tokens
-                    if ((cookieName.includes('token') || cookieName.includes('auth') || cookieName.includes('jwt')) &&
-                        !cookieName.includes('csrf') &&
-                        cookieValue.length > 50) {
-                        return true;
-                    }
-                }
-            } catch(e) {}
-
-            return false;
+                
+                // 2. Check for logged-in indicators (Avatar, Drawer/Sidebar)
+                var hasAvatar = !!document.querySelector('.MuiAvatar-root, [class*="Avatar"]');
+                var hasDrawer = !!document.querySelector('.MuiDrawer-root, [class*="Drawer"], [class*="Sidebar"]');
+                
+                // 3. Check for user profile text (e.g., user name or email)
+                var allText = document.body.innerText || '';
+                var hasEmailPattern = /@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/.test(allText);
+                
+                // User is logged in if: no login buttons AND (has avatar OR has drawer OR has email)
+                var isLoggedIn = !loginButton && !signupButton && (hasAvatar || hasDrawer || hasEmailPattern);
+                
+                return isLoggedIn;
+            } catch(e) {
+                return false;
+            }
         })();
         """
 

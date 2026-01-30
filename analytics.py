@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
 from aqt import mw
 import sys
@@ -43,7 +43,7 @@ def init_analytics():
         current_time = datetime.now().strftime("%H:%M:%S")
 
         # Core metadata
-        analytics["first_install_date"] = datetime.now().isoformat()
+        analytics["first_install_date"] = datetime.now(timezone.utc).isoformat()
         analytics["user_id"] = str(uuid.uuid4())
         analytics["platform"] = sys.platform  # darwin, win32, linux
         analytics["locale"] = locale_info.get("locale")  # e.g., "en_US"
@@ -360,6 +360,10 @@ def send_analytics_background():
                 "has_shown_referral": analytics.get("has_shown_referral", False),
                 "referral_modal_status": analytics.get("referral_modal_status"),
                 "referral_modal_seconds_open": analytics.get("referral_modal_seconds_open"),
+                # Review tracking
+                "has_shown_review": analytics.get("has_shown_review", False),
+                "review_modal_status": analytics.get("review_modal_status"),
+                "review_modal_seconds_open": analytics.get("review_modal_seconds_open"),
                 # Session-based engagement (server calculates totals)
                 "daily_usage": analytics.get("daily_usage", {}),
             }
