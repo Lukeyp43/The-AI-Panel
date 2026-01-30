@@ -1,64 +1,66 @@
-Adds a **free AI side panel** to Anki. Powered by OpenEvidence. The AI is 100% free for med students, nurses, dentists, doctors, and anyone in healthcare.
+# AI Side Panel for Anki
 
-Ask questions and get answers from **real medical research with citations**. Highlight text on a card and hold Cmd to ask about it with context. Save prompts as templates for quick reuse.
+**A 100% free AI study tool for medical students, doctors, and healthcare professionals.**
+It uses OpenEvidence AI to answer your questions.
 
----
+![AI Side Panel Overview](screenshots/overview.png)
 
-## How to Use
+## Overview
+Ask questions and get answers from real medical research. Whether you are reviewing a card or checking a drug interaction, the side panel gives you evidence-based answers inside Anki.
 
-1. Click the book icon (📖) in the toolbar
-2. Type a question or use Quick Actions on highlighted text
-3. Get answers with citations
+*   **Free** for the healthcare community.
+*   **Real Citations**: Answers link to peer-reviewed sources like JAMA and PubMed.
+*   **Context-Aware**: It knows what card you are studying.
+*   *(Requires internet connection)*
 
 ---
 
 ## Features
 
-### Ask Questions
-Type any question in the panel. Get answers from peer-reviewed medical research with real citations from sources like JAMA and PubMed.
+### 1. Ask Questions
+Open the sidebar (click the book icon) and type any medical question. You will get a detailed answer with links to the literature.
 
-### Quick Actions
-While reviewing cards, hold **Cmd** (Mac) or **Ctrl** (Windows) and highlight text. A floating bar appears with two options:
+### 2. Quick Actions
+You can highlight text on any card while holding `Cmd` (Mac) or `Ctrl` (Windows).
 
-**Add to Chat** (Default: Cmd+F)
-- Sends highlighted text directly to the search box
-- Opens the panel if closed
-- Edit the text or hit Enter to search
+![Quick Actions Bubble](screenshots/quick_actions.png)
 
-**Ask Question** (Default: Cmd+R)
-- Opens an input field to type your question
-- Your highlighted text is added as context
-- Press Enter to submit
-- OpenEvidence receives: "Your question" + "Context: [selected text]"
+A floating bar will appear with two options:
+*   **Add to Chat (`Cmd+F`)**: Sends the highlighted text to the sidebar. It is quoted as context so the AI knows what you are referring to.
+*   **Ask Question (`Cmd+R`)**: Opens a box for you to ask a specific question.
 
-### Templates
-Save prompts you use often. 3 presets included:
 
-- **Explain** (Cmd+Shift+S) - Sends card with "Can you explain this"
-- **Front Only** (Cmd+Shift+Q) - Sends just the front of your card
-- **Back Only** (Cmd+Shift+A) - Sends just the back of your card
-
-Create your own templates using {front} and {back} placeholders.
-
-### Custom Keybinds
-Change any shortcut in Settings:
-1. Click the gear icon in the panel
-2. Go to Quick Actions or Templates
-3. Click the shortcut button and press your new keys
-4. Save
 
 ---
 
-## How to Install
+## Customization
 
-1. Go to Tools > Add-ons > Get Add-ons
-2. Paste: `[YOUR_CODE_HERE]`
-3. Restart Anki
-4. Click the book icon (📖) in the toolbar
+### Templates
+Save prompts you use often. We included 3 starters:
+*   **Explain**: "Can you explain this to me?"
+*   **Front Only**: Sends the front of the card.
+*   **Back Only**: Sends the back of the card.
+
+### Keybinds
+You can change every shortcut.
+1.  Open the Side Panel.
+2.  Click the **Gear Icon** > **Quick Actions**.
+3.  Click any shortcut button and press your new keys.
+
+---
+
+## Installation
+
+1.  Open Anki.
+2.  Go to **Tools** > **Add-ons** > **Get Add-ons**.
+3.  Paste the code: `1314683963`
+4.  Restart Anki.
+5.  Click the **Book Icon** in the toolbar to start studying.
 
 ---
 
 ## Support
 
-- [Feature Request](https://github.com/Lukeyp43/AI-Side-Panel/issues/new?labels=feature%20request)
-- [Bug Report](https://github.com/Lukeyp43/AI-Side-Panel/issues/new?labels=bug)
+Have an idea or found a bug?
+*   [Feature Request](https://github.com/Lukeyp43/OpenEvidence-AI/issues/new)
+*   [Bug Report](https://github.com/Lukeyp43/OpenEvidence-AI/issues/new)
