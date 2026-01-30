@@ -62,5 +62,5 @@ You can change every shortcut.
 ## Support
 
 Have an idea or found a bug?
-*   [Feature Request](https://github.com/Lukeyp43/OpenEvidence-AI/issues/new)
-*   [Bug Report](https://github.com/Lukeyp43/OpenEvidence-AI/issues/new)
+*   [Feature Request](https://github.com/Lukeyp43/AI-Side-Panel/issues/new?labels=feature%20request)
+*   [Bug Report](https://github.com/Lukeyp43/AI-Side-Panel/issues/new?labels=bug)
