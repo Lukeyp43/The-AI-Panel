@@ -273,7 +273,7 @@ class QuickActionsSettingsView(KeyRecorderMixin, QWidget):
         """Save shortcuts to config"""
         config = mw.addonManager.getConfig(ADDON_NAME)
         config["quick_actions"] = self.shortcuts
-        mw.addonManager.writeConfig(__name__, config)
+        mw.addonManager.writeConfig(ADDON_NAME, config)
 
         # Update the JavaScript config in the reviewer immediately
         self._update_reviewer_config()

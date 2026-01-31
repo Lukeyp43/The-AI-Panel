@@ -99,7 +99,7 @@ class SettingsListView(QWidget):
                 }
             ]
             config["keybindings"] = self.keybindings
-            mw.addonManager.writeConfig(__name__, config)
+            mw.addonManager.writeConfig(ADDON_NAME, config)
 
         self.refresh_list()
 
@@ -393,7 +393,7 @@ class SettingsListView(QWidget):
 
         del keybindings[index]
         config["keybindings"] = keybindings
-        mw.addonManager.writeConfig(__name__, config)
+        mw.addonManager.writeConfig(ADDON_NAME, config)
 
         # Track template deletion in analytics
         try:

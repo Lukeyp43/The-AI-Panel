@@ -27,7 +27,7 @@ def ensure_platform_defaults():
     On Mac: Meta (⌘) + F/R
     On Windows/Linux: Control + F/R
     """
-    config = mw.addonManager.getConfig(__name__) or {}
+    config = mw.addonManager.getConfig(ADDON_NAME) or {}
     
     # Check if quick_actions needs platform-specific defaults
     quick_actions = config.get("quick_actions", {})
@@ -57,7 +57,7 @@ def ensure_platform_defaults():
                 "add_to_chat": {"keys": ["Control", "F"]},
                 "ask_question": {"keys": ["Control", "R"]}
             }
-        mw.addonManager.writeConfig(__name__, config)
+        mw.addonManager.writeConfig(ADDON_NAME, config)
         print(f"OpenEvidence: Set platform-appropriate quick action defaults for {'Mac' if IS_MAC else 'Windows/Linux'}")
 
 
@@ -71,7 +71,7 @@ def create_dock_widget():
         dock_widget.setObjectName("AIPanelDock")
 
         # Check if onboarding is complete
-        config = mw.addonManager.getConfig(__name__) or {}
+        config = mw.addonManager.getConfig(ADDON_NAME) or {}
         onboarding_complete = config.get("onboarding_completed", False)
         tutorial_complete = config.get("tutorial_completed", False)
 
